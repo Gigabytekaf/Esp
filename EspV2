@@ -81,7 +81,7 @@ local function disableESP()
 end
 
 -- Замените путь на вашу кнопку, например:
-local toggleButton = script.Parent:WaitForChild("ToggleButton")
+local toggleButton = script.Parent:WaitForChild("ESP")
 
 toggleButton.MouseButton1Click:Connect(function()
     ESPEnabled = not ESPEnabled
