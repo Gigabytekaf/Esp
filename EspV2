@@ -1,0 +1,95 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local ESPEnabled = false
+local connections = {}
+
+local function clearESP(player)
+    if player.Character then
+        local root = player.Character:FindFirstChild("HumanoidRootPart")
+        local head = player.Character:FindFirstChild("Head")
+        if root then
+            local box = root:FindFirstChild("ESP_BOX")
+            if box then box:Destroy() end
+        end
+        if head then
+            local name = head:FindFirstChild("ESP_NAME")
+            if name then name:Destroy() end
+        end
+    end
+end
+
+local function addESP(player)
+    if player == LocalPlayer then return end
+    local function onCharacter(character)
+        clearESP(player)
+        local root = character:WaitForChild("HumanoidRootPart", 5)
+        local head = character:WaitForChild("Head", 5)
+        if root and not root:FindFirstChild("ESP_BOX") then
+            local box = Instance.new("BoxHandleAdornment")
+            box.Name = "ESP_BOX"
+            box.Adornee = root
+            box.Size = Vector3.new(4, 7, 2)
+            box.Color3 = Color3.new(0, 1, 0)
+            box.Transparency = 0.5
+            box.AlwaysOnTop = true
+            box.ZIndex = 10
+            box.Parent = root
+        end
+        if head and not head:FindFirstChild("ESP_NAME") then
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "ESP_NAME"
+            billboard.Adornee = head
+            billboard.Size = UDim2.new(0, 200, 0, 50)
+            billboard.StudsOffset = Vector3.new(0, 2, 0)
+            billboard.AlwaysOnTop = true
+            billboard.Parent = head
+
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Parent = billboard
+            nameLabel.Size = UDim2.new(1, 0, 1, 0)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = player.Name
+            nameLabel.TextColor3 = Color3.new(1, 1, 1)
+            nameLabel.TextStrokeTransparency = 0.5
+            nameLabel.Font = Enum.Font.SourceSansBold
+            nameLabel.TextScaled = true
+        end
+    end
+    local conn = player.CharacterAdded:Connect(onCharacter)
+    table.insert(connections, conn)
+    if player.Character then
+        onCharacter(player.Character)
+    end
+end
+
+local function enableESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        addESP(player)
+    end
+    table.insert(connections, Players.PlayerAdded:Connect(addESP))
+end
+
+local function disableESP()
+    for _, player in ipairs(Players:GetPlayers()) do
+        clearESP(player)
+    end
+    for _, conn in ipairs(connections) do
+        conn:Disconnect()
+    end
+    connections = {}
+end
+
+-- Замените путь на вашу кнопку, например:
+local toggleButton = script.Parent:WaitForChild("ToggleButton")
+
+toggleButton.MouseButton1Click:Connect(function()
+    ESPEnabled = not ESPEnabled
+    if ESPEnabled then
+        enableESP()
+        toggleButton.Text = "ESP ВКЛ"
+    else
+        disableESP()
+        toggleButton.Text = "ESP ВЫКЛ"
+    end
+end)
